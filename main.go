@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/chromedp/chromedp"
 )
@@ -65,7 +67,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ioutil.WriteFile("./resault.txt", []byte(res), os.ModePerm)
+	ioutil.WriteFile("./resault.csv", []byte(dataParse(res)), os.ModePerm)
 	log.Printf("overview: %s", res)
 }
 
@@ -79,4 +81,16 @@ func text(res *string) chromedp.Tasks {
 		chromedp.Click(".show-more", chromedp.NodeVisible, chromedp.ByQuery),
 		chromedp.Text(".phenom-list", res, chromedp.NodeVisible, chromedp.ByQuery),
 	}
+}
+
+func dataParse(data string) string {
+	dataArr := strings.Split(data, "发送中…")
+	retArr := []string{}
+	reg := regexp.MustCompile(`\s*?(.+)在\s+?(\d+.+?)(\d+月\d+日)`)
+	for _, item := range dataArr {
+		if reg.MatchString(item) {
+			retArr = append(retArr, reg.ReplaceAllString(item, "$1,$2,$3"))
+		}
+	}
+	return strings.Join(retArr, "\n")
 }
